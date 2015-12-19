@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMR", "AMR\AMR.vcxproj", "{4229CB94-449F-4B99-B46A-112D8A4B7814}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMRENC", "AMRENC\AMRENC.vcxproj", "{B559ED1F-D3C3-4DF6-B292-96D7E1FDB70E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMRDEC", "AMRDEC\AMRDEC.vcxproj", "{69B25F62-2225-4FE8-9677-889257A33850}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMRENC_F", "AMRENC_F\AMRENC_F.vcxproj", "{CF9DC7BF-F4DF-4B01-BE19-F8AF92F4A44A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AMRDEC_F", "AMRDEC_F\AMRDEC_F.vcxproj", "{4EC0ACD9-7612-4B38-A1B3-8E1B96893DAC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vocoder", "Vocoder\Vocoder.vcxproj", "{BC37CF46-88B6-4C99-8033-41CD5452225F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4229CB94-449F-4B99-B46A-112D8A4B7814}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4229CB94-449F-4B99-B46A-112D8A4B7814}.Debug|Win32.Build.0 = Debug|Win32
+		{4229CB94-449F-4B99-B46A-112D8A4B7814}.Release|Win32.ActiveCfg = Release|Win32
+		{4229CB94-449F-4B99-B46A-112D8A4B7814}.Release|Win32.Build.0 = Release|Win32
+		{B559ED1F-D3C3-4DF6-B292-96D7E1FDB70E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B559ED1F-D3C3-4DF6-B292-96D7E1FDB70E}.Debug|Win32.Build.0 = Debug|Win32
+		{B559ED1F-D3C3-4DF6-B292-96D7E1FDB70E}.Release|Win32.ActiveCfg = Release|Win32
+		{B559ED1F-D3C3-4DF6-B292-96D7E1FDB70E}.Release|Win32.Build.0 = Release|Win32
+		{69B25F62-2225-4FE8-9677-889257A33850}.Debug|Win32.ActiveCfg = Debug|Win32
+		{69B25F62-2225-4FE8-9677-889257A33850}.Debug|Win32.Build.0 = Debug|Win32
+		{69B25F62-2225-4FE8-9677-889257A33850}.Release|Win32.ActiveCfg = Release|Win32
+		{69B25F62-2225-4FE8-9677-889257A33850}.Release|Win32.Build.0 = Release|Win32
+		{CF9DC7BF-F4DF-4B01-BE19-F8AF92F4A44A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CF9DC7BF-F4DF-4B01-BE19-F8AF92F4A44A}.Debug|Win32.Build.0 = Debug|Win32
+		{CF9DC7BF-F4DF-4B01-BE19-F8AF92F4A44A}.Release|Win32.ActiveCfg = Release|Win32
+		{CF9DC7BF-F4DF-4B01-BE19-F8AF92F4A44A}.Release|Win32.Build.0 = Release|Win32
+		{4EC0ACD9-7612-4B38-A1B3-8E1B96893DAC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4EC0ACD9-7612-4B38-A1B3-8E1B96893DAC}.Debug|Win32.Build.0 = Debug|Win32
+		{4EC0ACD9-7612-4B38-A1B3-8E1B96893DAC}.Release|Win32.ActiveCfg = Release|Win32
+		{4EC0ACD9-7612-4B38-A1B3-8E1B96893DAC}.Release|Win32.Build.0 = Release|Win32
+		{BC37CF46-88B6-4C99-8033-41CD5452225F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BC37CF46-88B6-4C99-8033-41CD5452225F}.Debug|Win32.Build.0 = Debug|Win32
+		{BC37CF46-88B6-4C99-8033-41CD5452225F}.Release|Win32.ActiveCfg = Release|Win32
+		{BC37CF46-88B6-4C99-8033-41CD5452225F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
