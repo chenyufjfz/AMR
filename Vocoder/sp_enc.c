@@ -256,6 +256,17 @@ typedef struct
 {
    LevinsonState * LevinsonSt;
 }lpcState;
+#ifdef CHENYU_DBG
+static int session = 0;
+void write_file(FILE* fp, Float32 *a, int len)
+{
+	short buf[320];
+	int i;
+	for (i = 0; i < len; i++)
+		buf[i] = (short) (a[i]/64);
+	fwrite(buf, 2, len, fp);
+}
+#endif
 typedef struct
 {
    /* Speech vector */
@@ -310,7 +321,10 @@ typedef struct
 
 #ifdef CHENYU_DBG
    unsigned frame_num;
-   FILE * fstat;
+   FILE * fstat, *ftrace1, *ftrace2, *ftrace3;
+   Float32 trace_buf[L_FRAME];
+   Float32 trace_buf2[L_FRAME];
+   Float32 trace_buf3[L_FRAME];
 #endif
 }cod_amrState;
 typedef struct
@@ -2896,15 +2910,15 @@ static void subframePreProc( enum Mode mode, const Float32 gamma1[], const
     * Find the target vector for pitch search:
     */
    /* LP residual */
-   Residu( Aq, speech, res2 ); //res2 = Aq * speech;
+   Residu( Aq, speech, res2 ); //res2 = speech * Aq
    memcpy( exc, res2, L_SUBFR <<2 );
 
    /* Synthesis filter */
    Syn_filt( Aq, exc, error, mem_err, 0 ); // error = speech 
-   Residu( Ap1, error, xn ); //xn = Ap1 * speech
+   Residu( Ap1, error, xn ); //xn = error* Ap1
 
    /* target signal xn[] */
-   Syn_filt( Ap2, xn, xn, mem_w0, 0 ); //xn = speech * Ap1 /Ap2
+   Syn_filt( Ap2, xn, xn, mem_w0, 0 ); //xn = error * Ap1 /Ap2
 }
 
 
@@ -3974,7 +3988,7 @@ static void cl_ltp( Word32 *T0_prev_subframe, Float32 *gp, enum Mode mode,
    for (i = -(PIT_MAX + L_INTERPOL); i < 40; i++)
       exc_tmp_p[i] = (Word32)exc[i];
 
-   Pred_lt_3or6_fixed( exc_tmp_p, *T0, *T0_frac, resu3 );
+   Pred_lt_3or6_fixed( exc_tmp_p, *T0, *T0_frac, resu3 ); //adjust exc 0..40 based on T0 and T0_frac 
 
    for (i = -(PIT_MAX + L_INTERPOL); i < 40; i++)
       exc[i] = (Float32)exc_tmp_p[i];
@@ -10517,11 +10531,15 @@ static void cod_amr( cod_amrState *st, enum Mode mode, Float32 new_speech[],
    lsp( mode, *used_mode, st->lspSt->lsp_old, st->lspSt->lsp_old_q, st->lspSt->
          qSt->past_rq, A_t, Aq_t, lsp_new, &ana );
 #ifdef CHENYU_DBG
+   st->frame_num++;
    fprintf(st->fstat, "frame:%d\n", st->frame_num);
    for (i_subfr = 0; i_subfr < 4; i_subfr++) {
-	   fprintf(st->fstat, "Az%d:", i_subfr);
+	   fprintf(st->fstat, "Az %d\t:", i_subfr);
 	   for (i = 0; i < 11; i++)
 		   fprintf(st->fstat, "%8.5f,", A_t[i_subfr * 11 + i]);
+	   fprintf(st->fstat, "\nAzq%d\t:", i_subfr);
+	   for (i = 0; i < 11; i++)
+		   fprintf(st->fstat, "%8.5f,", Aq_t[i_subfr * 11 + i]);
 	   fprintf(st->fstat, "\n");
    }
 #endif
@@ -10662,13 +10680,19 @@ static void cod_amr( cod_amrState *st, enum Mode mode, Float32 new_speech[],
 
       /* copy the LP residual (res2 is modified in the CL LTP search) */
       memcpy( res2, res, L_SUBFR <<2 );
-
+#ifdef CHENYU_DBG
+	  memcpy(&st->trace_buf[i_subfr], xn, L_SUBFR << 2);
+	  memcpy(&st->trace_buf2[i_subfr], res, L_SUBFR << 2);	  
+#endif
       /* Closed-loop LTP search */
       cl_ltp( &st->clLtpSt->pitchSt->T0_prev_subframe, st->tonStabSt->gp, *
             used_mode, i_subfr, T_op, st->h1, &st->exc[i_subfr], res2, xn,
             lsp_flag, xn2, y1, &T0, &T0_frac, &gain_pit, gCoeff, &ana, &gp_limit
             );
-
+#ifdef CHENYU_DBG
+	  fprintf(st->fstat, "T0=%d, g_pit=%8f, g0=%8f, g1=%8f", T0, gain_pit, gCoeff[0], gCoeff[1]);
+	  memcpy(&st->trace_buf3[i_subfr], res2, L_SUBFR << 2);
+#endif
       /* update LTP lag history */
       if ( ( subfrNr == 0 ) && ( st->ol_gain_flg[0] > 0 ) ) {
          st->old_lags[1] = T0;
@@ -10692,7 +10716,9 @@ static void cod_amr( cod_amrState *st, enum Mode mode, Float32 new_speech[],
             , gp_limit, &gain_pit, &gain_code, &st->gainQuantSt->adaptSt->
             prev_gc, &st->gainQuantSt->adaptSt->onset, st->gainQuantSt->adaptSt
             ->ltpg_mem, &st->gainQuantSt->adaptSt->prev_alpha, &ana );
-
+#ifdef CHENYU_DBG
+	  fprintf(st->fstat, "g_pit=%8f, g_code=%8f\n", gain_pit, gain_code);	 
+#endif
       /* update gain history */
       for ( i = 0; i < N_FRAME - 1; i++ ) {
          st->tonStabSt->gp[i] = st->tonStabSt->gp[i + 1];
@@ -10761,6 +10787,11 @@ static void cod_amr( cod_amrState *st, enum Mode mode, Float32 new_speech[],
    }
 the_end:
 
+#ifdef CHENYU_DBG
+   write_file(st->ftrace1, st->trace_buf, 160);
+   write_file(st->ftrace2, st->trace_buf2, 160);
+   write_file(st->ftrace3, st->trace_buf3, 160);
+#endif
    /* Update signal for next frame. */
    for ( i = 0; i < PIT_MAX; i++ ) {
       st->old_wsp[i] = st->old_wsp[L_FRAME + i];
@@ -11107,7 +11138,9 @@ static void cod_amr_reset( cod_amrState *s, Word32 dtx )
 static Word32 cod_amr_init( cod_amrState **state, Word32 dtx )
 {
    cod_amrState * s;
-
+#ifdef CHENYU_DBG
+   char file_name[50];
+#endif
    if ( ( s = ( cod_amrState * ) malloc( sizeof( cod_amrState ) ) ) == NULL ) {
       fprintf( stderr, "can not malloc state structure\n" );
       return-1;
@@ -11208,7 +11241,15 @@ static Word32 cod_amr_init( cod_amrState **state, Word32 dtx )
 
 #ifdef CHENYU_DBG
    s->frame_num = 0;
-   s->fstat = fopen("enc_stat.txt", "w");
+   session++;
+   sprintf(file_name, "C:\\chenyu\\work\\vocoder\\wav\\enc_stat%d.txt", session);
+   s->fstat = fopen(file_name, "w");
+   sprintf(file_name, "C:\\chenyu\\work\\vocoder\\wav\\trace%d_0.raw", session);
+   s->ftrace1 = fopen(file_name, "w");
+   sprintf(file_name, "C:\\chenyu\\work\\vocoder\\wav\\trace%d_1.raw", session);
+   s->ftrace2 = fopen(file_name, "w");
+   sprintf(file_name, "C:\\chenyu\\work\\vocoder\\wav\\trace%d_2.raw", session);
+   s->ftrace3 = fopen(file_name, "w");
 #endif
    cod_amr_reset( s, dtx );
    *state = s;
@@ -11249,10 +11290,13 @@ static void cod_amr_exit( cod_amrState **state )
    free( ( *state )->pitchOLWghtSt );
    free( ( *state )->tonStabSt );
    free( ( *state )->dtxEncSt );
-   free( *state );
 #ifdef CHENYU_DBG
    fclose((*state)->fstat);
+   fclose((*state)->ftrace1);
+   fclose((*state)->ftrace2);
+   fclose((*state)->ftrace3);
 #endif
+   free( *state );
    *state = NULL;
    return;
 }

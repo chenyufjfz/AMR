@@ -87,7 +87,7 @@ void test_transform(int argc, char **argv)
 	AudioSink as, as2;
 	string filesrc, filedst, filerec;
 	AudioFormat in_fmt=WAV;
-	int *enstate;
+	int *enstate, *enstate2;
 	int *destate;
 	unsigned char serial_data[32];
 	short speech[160];
@@ -116,7 +116,7 @@ void test_transform(int argc, char **argv)
 
 	au.open(filesrc.c_str(), in_fmt, 1, 8000, 2);
 	as.open(filedst.c_str(), WAV, 1, 8000, 2);
-	//as2.open(filerec.c_str(), WAV, 1, 8000, 2);
+	as2.open(filerec.c_str(), WAV, 1, 8000, 2);
 
 	vector<double> f1, f2, f3;
 	f1.assign(l_1700_1800, l_1700_1800 + sizeof(l_1700_1800)/sizeof(l_1700_1800[0]));
@@ -126,25 +126,63 @@ void test_transform(int argc, char **argv)
 	vector<int> x, y;
 	int frame=0;
 	enstate = (int*) Encoder_Interface_init(0);
+	enstate2 = (int*)Encoder_Interface_init(0);
 	destate = (int*) Decoder_Interface_init();
 	while (1) {
 		if (!au.getpcm(x, 160))
 			break;
 		
-		CCfits::fill(x, speech);
+		CCfits::fill(x, speech);		
 		Encoder_Interface_Encode(enstate, req_mode, speech, serial_data, 0);
-		Decoder_Interface_Decode(destate, serial_data, synth, 0);
-		CCfits::fill(synth, y, 0, 160);
 
+		tx_swap.transform3(x, y);
 		as.putpcm(y, 160);
+
+		CCfits::fill(y, speech);
+		Encoder_Interface_Encode(enstate2, req_mode, speech, serial_data, 0);
+		Decoder_Interface_Decode(destate, serial_data, synth, 0);
+		
+		CCfits::fill(synth, x, 0, 160);
+		rx_swap.transform3(x, y);
+		as2.putpcm(y, 160);
 		//as2.putpcm(x, 160);
 	}
 	as.close();
 	au.close();
+	Encoder_Interface_exit(enstate);
+	Encoder_Interface_exit(enstate2);
+	Decoder_Interface_exit(destate);
 }
 
+void raw2wav(string filename)
+{
+	FILE * fp;
+	short buf[4096];
+	vector<int> y;
+	AudioSink as;
+	fp = fopen(filename.c_str(), "rb");
+	if (fp == NULL)
+		return;
+	filename.replace(filename.end() - 4, filename.end(), ".wav");
+	as.open(filename.c_str(), WAV, 1, 8000, 2);
+	while (1) {
+		int read=fread(buf, 2, sizeof(buf)/2, fp);
+		if (read == 0)
+			break;
+		CCfits::fill(buf, y, 0, read);
+		as.putpcm(y, read);
+	}
+	fclose(fp);
+	as.close();
+}
 
 int main(int argc, char **argv)
 {
 	test_transform(argc, argv);
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace1_0.raw");
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace1_1.raw");
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace1_2.raw");
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace2_0.raw");
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace2_1.raw");
+	raw2wav("C:\\chenyu\\work\\vocoder\\wav\\trace2_2.raw");
 }

@@ -618,5 +618,12 @@ public:
 		for (unsigned i = 0; i<in.size(); i++)
 			out[i] = (i % 2 == 0) ? in[i] : -in[i];
 	}
+
+	void transform3(const vector<int> & in, vector<int> & out)
+	{
+		out.resize(in.size());
+		for (unsigned i = 0; i<in.size(); i++)
+			out[i] = (i % 4 <2) ? in[i] : -in[i];
+	}
 };
 #endif /* LINEARESTIMATE_H_ */
